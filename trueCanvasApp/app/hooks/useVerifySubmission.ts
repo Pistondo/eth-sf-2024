@@ -18,7 +18,7 @@ export function useVerifySubmission() {
 
     try {
       const imageBase64 = await fileToBase64(image);
-        
+
       const response = await fetch('https://truecanvas.uc.r.appspot.com/verify', {
         method: 'POST',
         headers: {
@@ -26,19 +26,26 @@ export function useVerifySubmission() {
         },
         body: JSON.stringify({
           image: imageBase64,
-          logs: text, // Ensure this matches backend; previously it was "text"
+          logs: text,
         }),
       });
-
-      console.log('response here: ', response);
 
       if (!response.ok) {
         throw new Error('Verification failed');
       }
 
+      console.log(response);
+
+      const data = await response.json();
       setState({ isLoading: false, error: null, success: true });
+      console.log(data.ImageID);
+
+      // debugger;
+
+      return {imageId: data.ImageID};
     } catch (error) {
       setState({ isLoading: false, error: (error as Error).message, success: false });
+      return null;
     }
   };
 
