@@ -1,0 +1,3 @@
+[submodule "trueCanvasContracts/lib/forge-std"]
+	path = trueCanvasContracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
