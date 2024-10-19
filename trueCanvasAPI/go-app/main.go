@@ -57,14 +57,12 @@ func getProofStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func verifyLogsAsLegitimate(logsText string) bool {
-	copyCount := countWordOccurrences(logsText, "copy")
 	pasteCount := countWordOccurrences(logsText, "paste")
 
-	if (copyCount*4+pasteCount*5)/4 >= len(logsText) {
+	if (pasteCount*5)/4 >= len(logsText) {
 		return false
 	}
 	return true
-
 }
 
 func countWordOccurrences(text, word string) int {
