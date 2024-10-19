@@ -1,1 +1,3 @@
 runtime: go122  # or another supported version
+manual_scaling:
+    instances: 1
