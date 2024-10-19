@@ -108,6 +108,9 @@ func getProofStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	imageID := r.URL.Query().Get("imageID")
+	if imageID == "" {
+		fmt.Fprint(w, "You need to include an 'imageID'")
+	}
 	fmt.Fprint(w, imageID)
 }
 
