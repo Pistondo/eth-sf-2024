@@ -5,10 +5,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 const proverURL string = "https://example.com"
@@ -87,12 +91,41 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello, World!")
 }
 
+func GenerateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = charset[rand.Intn(len(charset))] // Randomly select a character
+	}
+	return string(result)
+}
+
 // Async To Get Verify
-func callProver() {
+func callProver(imageID string) {
 	res, err := http.Get(proverURL)
 	if err != nil {
 		log.Printf((err.Error()))
 	}
+
+	// Remove this once you're done testing.
+	sleepDuration := time.Duration(rand.Intn(36)+25) * time.Second
+	time.Sleep(sleepDuration)
+
+	zkproof := ZKProof{
+		SourceHash: GenerateRandomString(25),
+		DestHash:   GenerateRandomString(25),
+		Proof:      []string{GenerateRandomString(7), GenerateRandomString(7), GenerateRandomString(7)},
+	}
+
+	data, _ := json.MarshalIndent(zkproof, "", "  ")
+
+	// No error handling "sorry!"
+	f, _ := os.CreateTemp("", imageID+"___*")
+	log.Printf("Temp fileName %s", f.Name())
+	f.Write(data)
+
+	defer f.Close()
+
 	log.Printf("End line has been reached %d", res.StatusCode)
 }
 
@@ -110,8 +143,68 @@ func getProofStatusHandler(w http.ResponseWriter, r *http.Request) {
 	imageID := r.URL.Query().Get("imageID")
 	if imageID == "" {
 		fmt.Fprint(w, "You need to include an 'imageID'")
+		return
 	}
-	fmt.Fprint(w, imageID)
+
+	if checkProofExists(imageID) {
+		json.NewEncoder(w).Encode(GetProofResponse{
+			ProofStatus: "proven",
+			ZKproof:     getProofObject(imageID),
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(GetProofResponse{
+		ProofStatus: "unproven",
+		ZKproof: ZKProof{
+			SourceHash: "",
+			DestHash:   "",
+			Proof:      []string{},
+		},
+	})
+
+}
+
+func checkProofExists(imageID string) bool {
+	tempDir := os.TempDir()
+	files, _ := os.ReadDir(tempDir)
+	for _, file := range files {
+		if !file.IsDir() && strings.Contains(file.Name(), imageID) {
+			log.Printf("Found %s", file.Name())
+			return true
+		}
+	}
+
+	log.Printf("Checking imageID %s", imageID)
+	return false
+}
+
+func getProofObject(imageID string) ZKProof {
+	log.Printf("Getting imageID %s", imageID)
+	tempDir := os.TempDir()
+	files, _ := os.ReadDir(tempDir)
+	var zkProof ZKProof
+
+	for _, file := range files {
+		fileName := file.Name()
+		if !file.IsDir() && strings.Contains(fileName, imageID) {
+			fullPath := filepath.Join(os.TempDir(), fileName)
+			file, _ := os.Open(fullPath)
+			data, _ := io.ReadAll(file)
+			log.Printf("Full path %s", fullPath)
+			if err := json.Unmarshal((data), &zkProof); err != nil {
+				log.Fatalf("Failed to unmarshal JSON: %v", err)
+			}
+			defer file.Close()
+			return zkProof
+		}
+	}
+
+	return ZKProof{
+		SourceHash: "",
+		DestHash:   "",
+		Proof:      []string{},
+	}
 }
 
 // PostVerify Request
@@ -138,6 +231,8 @@ func postVerify(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	verified := verifyLogsAsLegitimate(verifyRequest.Logs)
+	imageId := hashString(verifyRequest.Image)
+
 	if !verified {
 		json.NewEncoder(w).Encode(VerifyResponse{
 			VerificationStatus: "unverified",
@@ -146,9 +241,7 @@ func postVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go callProver()
-
-	imageId := hashString(verifyRequest.Image)
+	go callProver(imageId)
 
 	json.NewEncoder(w).Encode(VerifyResponse{
 		VerificationStatus: "verified",
