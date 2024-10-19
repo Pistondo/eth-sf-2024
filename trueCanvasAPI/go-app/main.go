@@ -86,6 +86,11 @@ func countWordOccurrences(text, word string) int {
 }
 
 func postVerify(w http.ResponseWriter, r *http.Request) {
+	allowAllOrigns(w)
+	if r.Method != http.MethodPost {
+		return
+	}
+
 	var verifyRequest VerifyRequest
 	json.NewDecoder(r.Body).Decode(&verifyRequest)
 
@@ -100,7 +105,6 @@ func postVerify(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Received Body: %s\n", truncate(verifyRequest.Logs))
 
 	w.Header().Set("Content-Type", "application/json")
-	allowAllOrigns(w)
 	w.WriteHeader(http.StatusOK)
 
 	verified := verifyLogsAsLegitimate(verifyRequest.Logs)
