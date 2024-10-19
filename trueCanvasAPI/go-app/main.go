@@ -89,8 +89,15 @@ func postVerify(w http.ResponseWriter, r *http.Request) {
 	var verifyRequest VerifyRequest
 	json.NewDecoder(r.Body).Decode(&verifyRequest)
 
-	fmt.Printf("Received Body: %s\n", verifyRequest.Image[:30])
-	fmt.Printf("Received Body: %s\n", verifyRequest.Logs[:30])
+	truncate := func(s string) string {
+		if len(s) > 30 {
+			return s[:30]
+		}
+		return s
+	}
+
+	fmt.Printf("Received Body: %s\n", truncate(verifyRequest.Image))
+	fmt.Printf("Received Body: %s\n", truncate(verifyRequest.Logs))
 
 	w.Header().Set("Content-Type", "application/json")
 	allowAllOrigns(w)
@@ -135,10 +142,10 @@ func callProver() {
 }
 
 func main() {
-	http.HandleFunc("/", (http.HandlerFunc(indexHandler)))
-	http.HandleFunc("/proof_status", (http.HandlerFunc(getProofStatusHandler)))
-	http.HandleFunc("/verify", (http.HandlerFunc(postVerify)))
-	http.HandleFunc("/available_contracts", (http.HandlerFunc(getAvailableContracts)))
+	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/proof_status", getProofStatusHandler)
+	http.HandleFunc("/verify", postVerify)
+	http.HandleFunc("/available_contracts", getAvailableContracts)
 
 	port := os.Getenv("PORT")
 	if port == "" {
