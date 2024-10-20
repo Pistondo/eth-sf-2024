@@ -276,7 +276,16 @@ func getAvailableContracts(w http.ResponseWriter, r *http.Request) {
 // Only PNG supported so far.
 // Function should return the blobID
 func uploadImageToWalrus(base64Image string, strChan chan string) {
-	base64Image = strings.TrimPrefix(base64Image, "data:image/png;base64,")
+	if strings.HasPrefix(base64Image, "data:image/png;base64,") {
+		base64Image = strings.TrimPrefix(base64Image, "data:image/png;base64,")
+	} else if strings.HasPrefix(base64Image, "data:image/jpeg;base64,") || strings.HasPrefix(base64Image, "data:image/jpg;base64,") {
+		base64Image = strings.TrimPrefix(base64Image, "data:image/jpeg;base64,")
+		base64Image = strings.TrimPrefix(base64Image, "data:image/jpg;base64,") // Also handle jpg
+	} else {
+		fmt.Println("Unsupported image format")
+		strChan <- "Unsupported image format"
+		return
+	}
 	imageData, err := base64.StdEncoding.DecodeString(base64Image)
 	if err != nil {
 		fmt.Println("Error decoding Base64:", err)
