@@ -3,7 +3,6 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { getContract } from 'viem';
 import { ZKP_VERIFIED_NFT_CONTRACT_ABI } from '@/app/abi/ZKPVerifiedNFTABI';
 import { isEthereumWallet } from '@dynamic-labs/ethereum';
-import { CONTRACT_ADDRESSES } from '../config/contractAddresses';
 import { PublicClient } from 'viem';
 import { evmNetworks } from '../config/evmNetworks';
 
@@ -26,7 +25,12 @@ export const useMintNFT = () => {
         try {
             const walletClient = await primaryWallet.getWalletClient();
             const publicClient = await primaryWallet.getPublicClient();
-            const contractAddress = CONTRACT_ADDRESSES.polygonZKEVM as `0x${string}`;
+            const chainId = await publicClient.getChainId();
+            const network = evmNetworks.find(network => network.chainId === chainId);
+            if (!network) {
+                throw new Error('Unsupported network');
+            }
+            const contractAddress = network.contractAddresses as `0x${string}`;
 
             const contract = getContract({
                 address: contractAddress,
@@ -52,7 +56,7 @@ export const useMintNFT = () => {
 
             // Implement polling for transaction receipt
             const receipt = await waitForTransactionReceipt(publicClient, hash);
-            const blockExplorerUrl = evmNetworks.find(network => network.chainId === 2442)?.blockExplorerUrls[0];
+            const blockExplorerUrl = evmNetworks.find(network => network.chainId === chainId)?.blockExplorerUrls[0];
             const explorerUrl = `${blockExplorerUrl}/tx/${receipt.transactionHash}`;
             setTxExplorerUrl(explorerUrl);
             console.log('Transaction successful: ', receipt);

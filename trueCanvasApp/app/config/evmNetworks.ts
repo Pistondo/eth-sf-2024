@@ -1,3 +1,5 @@
+import { CONTRACT_ADDRESSES } from './contractAddresses';
+
 const polygonZkEVMLogo = 'https://www.alchemy.com/_next/image?url=https%3A%2F%2Fwww.datocms-assets.com%2F105223%2F1700666769-polygon-zkevm-testnet-logo.png&w=96&q=75';
 const arbitrumSepoliaLogo = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/info/logo.png';
 const storyLogo = 'https://explorer.story.foundation/_next/static/media/favicon.94f4df06.png';
@@ -18,6 +20,7 @@ export const evmNetworks = [
       networkId: 2442,
       rpcUrls: ['https://rpc.cardona.zkevm-rpc.com'],
       vanityName: 'Polygon ZK EVM Cardona',
+      contractAddresses: CONTRACT_ADDRESSES.polygonZKEVM
     },
     {
       // arbitrum sepolia
@@ -35,6 +38,7 @@ export const evmNetworks = [
       networkId: 421614,
       rpcUrls: ['https://api.zan.top/arb-sepolia'],
       vanityName: 'Arbitrum Sepolia',
+      contractAddresses: CONTRACT_ADDRESSES.arbitrumSepolia
     },
     {
       // story
@@ -52,5 +56,6 @@ export const evmNetworks = [
       networkId: 1513,
       rpcUrls: ['https://testnet.storyrpc.io/'],
       vanityName: 'Story',
+      contractAddresses: CONTRACT_ADDRESSES.story
     }
   ];
