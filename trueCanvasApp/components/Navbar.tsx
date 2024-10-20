@@ -7,8 +7,7 @@ const Navbar = () => {
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <Link href="/" className="text-xl font-bold">A TrueCanvas</Link>
-          <Link href="/verify" className="hover:text-gray-300 transition-colors">Verify</Link>
-          <Link href="/gallery" className="hover:text-gray-300 transition-colors">Gallery</Link>
+          <Link href="/verify" className="hover:text-gray-300 transition-colors">Start Notarizing!</Link>
         </div>
         <DynamicWidget />
       </div>
