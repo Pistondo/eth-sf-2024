@@ -18,7 +18,7 @@ import (
 )
 
 const proverURL string = "https://example.com"
-const walrusPublisherURL string = "https://publisher.walrus-testnet.walrus.space/v1/store?epochs=100"
+const walrusPublisherURL string = "https://publisher.walrus-testnet.walrus.space/v1/store?epochs=25"
 const walrusAggregatorURL string = "https://aggregator.walrus-testnet.walrus.space/v1/"
 
 // Proof Structures
