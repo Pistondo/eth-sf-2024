@@ -115,15 +115,17 @@ func callProver(imageID, base64ImageString string) {
 	go uploadImageToWalrus(base64ImageString, strChan)
 	walrusURI := <-strChan
 
-	// Remove this once you're done testing.
 	//sleepDuration := time.Duration(rand.Intn(10)+5) * time.Second
 	//time.Sleep(sleepDuration)
 
 	zkproof := ZKProof{
-		SourceHash: GenerateRandomString(25),
-		DestHash:   GenerateRandomString(25),
-		Proof:      []string{GenerateRandomString(7), GenerateRandomString(7), GenerateRandomString(7)},
-		WalrusURI:  walrusAggregatorURL + walrusURI,
+		SourceHash: "e11387bdb346d2368fac024bd6871e5e9c3a6e8291b0ac17be3d050eb1cc232f",
+		DestHash:   "73b7e07c8444bf0dc2111f80d1212fa79b0992544b68e6f123a84694c6d1f658",
+		Proof: []string{
+			"37905742895720750542009666788899937801265355620185915402608280492924362096955,91653039768289142387644392454542469250375511500801526639052183256597809674367",
+			"29282721957531656506526067913321032855723840849241560557902582691225987477063,25978214047890737401811901452800596619031323604074547552387213327909293699642",
+			"36550106928460180569271555367986567456046797915658716132591967310345392687508,23794759076282294490963376508819934262355253723056429645157674043871775426320"},
+		WalrusURI: walrusAggregatorURL + walrusURI,
 	}
 
 	data, _ := json.MarshalIndent(zkproof, "", "  ")
