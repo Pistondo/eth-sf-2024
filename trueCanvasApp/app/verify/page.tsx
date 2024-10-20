@@ -27,7 +27,7 @@ export default function Verify() {
   const [displayMsg, setDisplayMsg] = useState<string>('');
   const [waitingTime, setWaitingTime] = useState<number>(0);
 
-  const { mintNFT, loading: mintingLoading, error: mintingError } = useMintNFT();
+  const { mintNFT, loading: mintingLoading, error: mintingError, txExplorerUrl } = useMintNFT();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -146,6 +146,19 @@ export default function Verify() {
         </button>
       )}
       {mintingError && <p className="text-red-500 mt-4">{mintingError}</p>}
+      {txExplorerUrl && (
+        <p className="mt-4">
+          Transaction successful! View on block explorer:{' '}
+          <a
+            href={txExplorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+          >
+            {txExplorerUrl}
+          </a>
+        </p>
+      )}
     </PageLayout>
   );
 }

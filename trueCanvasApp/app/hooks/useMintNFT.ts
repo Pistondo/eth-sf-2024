@@ -11,6 +11,7 @@ export const useMintNFT = () => {
     const { primaryWallet } = useDynamicContext();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [txExplorerUrl, setTxExplorerUrl] = useState<string | null>(null);
 
     const mintNFT = async (tokenURI: string) => {
         if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
@@ -20,6 +21,7 @@ export const useMintNFT = () => {
 
         setLoading(true);
         setError(null);
+        setTxExplorerUrl(null);
 
         try {
             const walletClient = await primaryWallet.getWalletClient();
@@ -51,8 +53,10 @@ export const useMintNFT = () => {
             // Implement polling for transaction receipt
             const receipt = await waitForTransactionReceipt(publicClient, hash);
             const blockExplorerUrl = evmNetworks.find(network => network.chainId === 2442)?.blockExplorerUrls[0];
+            const explorerUrl = `${blockExplorerUrl}/tx/${receipt.transactionHash}`;
+            setTxExplorerUrl(explorerUrl);
             console.log('Transaction successful: ', receipt);
-            console.log('Block explorer URL: ', `${blockExplorerUrl}/tx/${receipt.transactionHash}`);
+            console.log('Block explorer URL: ', explorerUrl);
         } catch (err) {
             console.error('Minting failed:', err);
             setError('Minting failed');
@@ -79,5 +83,5 @@ export const useMintNFT = () => {
         throw new Error('Transaction receipt not found after maximum attempts');
     };
 
-    return { mintNFT, loading, error };
+    return { mintNFT, loading, error, txExplorerUrl };
 };
