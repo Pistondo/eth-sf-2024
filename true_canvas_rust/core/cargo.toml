@@ -1,0 +1,11 @@
+[package]
+name = "true-canvas-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", default-features = false }
+ark-sponge = "0.4.0-alpha"
+ark-std = "0.4"
+ark-ff = "0.4"
+ark-ed-on-bls12-381 = "0.4"
