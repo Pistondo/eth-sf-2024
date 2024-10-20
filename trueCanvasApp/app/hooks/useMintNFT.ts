@@ -5,12 +5,16 @@ import { ZKP_VERIFIED_NFT_CONTRACT_ABI } from '@/app/abi/ZKPVerifiedNFTABI';
 import { isEthereumWallet } from '@dynamic-labs/ethereum';
 import { PublicClient } from 'viem';
 import { evmNetworks } from '../config/evmNetworks';
+import { waitForTransactionReceipt } from '../util/waitForTransactionReceipt';
 
 export const useMintNFT = () => {
     const { primaryWallet } = useDynamicContext();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [txExplorerUrl, setTxExplorerUrl] = useState<string | null>(null);
+    const [mintedTokenId, setMintedTokenId] = useState<bigint | null>(null);
+    const [mintedContractAddress, setMintedContractAddress] = useState<`0x${string}` | null>(null);
+    const [chainId, setChainId] = useState<number | null>(null);
 
     const mintNFT = async (sourceHash: string, destHash: string, proof: string[], walrusURI: string) => {
         if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
@@ -26,6 +30,7 @@ export const useMintNFT = () => {
             const walletClient = await primaryWallet.getWalletClient();
             const publicClient = await primaryWallet.getPublicClient();
             const chainId = await publicClient.getChainId();
+            setChainId(chainId);
             const network = evmNetworks.find(network => network.chainId === chainId);
             if (!network) {
                 throw new Error('Unsupported network');
@@ -52,37 +57,43 @@ export const useMintNFT = () => {
 
             // Implement polling for transaction receipt
             const receipt = await waitForTransactionReceipt(publicClient, hash);
+
+            // Extract the minted token ID from the event logs
+            const mintEvent = receipt.logs.find(log => 
+                log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef' // Transfer event topic
+            );
+            let tokenId: bigint | null = null;
+            if (mintEvent && mintEvent.topics[3]) {
+                tokenId = BigInt(mintEvent.topics[3]);
+                setMintedTokenId(tokenId);
+                setMintedContractAddress(contractAddress);
+            }
+
             const blockExplorerUrl = evmNetworks.find(network => network.chainId === chainId)?.blockExplorerUrls[0];
             const explorerUrl = `${blockExplorerUrl}/tx/${receipt.transactionHash}`;
             setTxExplorerUrl(explorerUrl);
             console.log('Transaction successful: ', receipt);
             console.log('Block explorer URL: ', explorerUrl);
             alert(`Transaction successful! View on block explorer: ${explorerUrl}`);
+            return { 
+                success: true, 
+                tokenId: tokenId, 
+                contractAddress: contractAddress,
+                chainId: chainId
+            };
         } catch (err) {
             console.error('Minting failed:', err);
             setError('Minting failed');
+            return { 
+                success: false, 
+                tokenId: null, 
+                contractAddress: null,
+                chainId: null
+            };
         } finally {
             setLoading(false);
         }
     };
 
-    // Helper function to poll for transaction receipt
-    const waitForTransactionReceipt = async (publicClient: PublicClient, hash: `0x${string}`, maxAttempts = 20) => {
-        for (let i = 0; i < maxAttempts; i++) {
-            try {
-                const receipt = await publicClient.getTransactionReceipt({ hash });
-                if (receipt) return receipt;
-            } catch (error) {
-                if ((error as Error).message.includes('could not be found')) {
-                    // Transaction not mined yet, wait and retry
-                    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-                } else {
-                    throw error; // Rethrow if it's a different error
-                }
-            }
-        }
-        throw new Error('Transaction receipt not found after maximum attempts');
-    };
-
-    return { mintNFT, loading, error, txExplorerUrl };
+    return { mintNFT, loading, error, txExplorerUrl, mintedTokenId, mintedContractAddress, chainId };
 };
