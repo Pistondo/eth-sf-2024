@@ -6,7 +6,7 @@ const Navbar = () => {
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <Link href="/" className="text-xl font-bold">TrueCanvas</Link>
+          <Link href="/" className="text-xl font-bold">A TrueCanvas</Link>
           <Link href="/verify" className="hover:text-gray-300 transition-colors">Verify</Link>
           <Link href="/gallery" className="hover:text-gray-300 transition-colors">Gallery</Link>
         </div>
