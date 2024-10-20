@@ -4,14 +4,21 @@ use methods::{
     GUEST_CODE_FOR_TRUST_CANVAS_ELF, GUEST_CODE_FOR_TRUST_CANVAS_ID
 };
 use risc0_zkvm::{default_prover, ExecutorEnv};
-use true_canvas_core::{build_merkle_tree_from_pixels, generate_random_command_sequence, generate_random_matrix, serialize_merkle_tree, CANVAS_SIZE};
+use true_canvas_core::{build_merkle_tree_from_pixels, generate_random_command_sequence, generate_random_matrix, serialize_merkle_tree, Command, CANVAS_SIZE};
+use serde::{Deserialize, Serialize};
+use warp::Filter;
 
-fn main() {
+
+#[derive(Deserialize)]
+struct Payload {
+    matrix: Vec<Vec<u32>>,
+    commands: Vec<Command>,
+}
+
+fn create_proof(matrix: Vec<Vec<u32>>, commands: Vec<Command>) {
 
 
-    let matrix = generate_random_matrix(CANVAS_SIZE);
     let merkle_tree = build_merkle_tree_from_pixels(matrix);
-    let commands = generate_random_command_sequence(10, CANVAS_SIZE, 4);
     let serialized_merkle_tree = serialize_merkle_tree(merkle_tree);
 
     
@@ -65,4 +72,24 @@ fn main() {
     receipt
         .verify(GUEST_CODE_FOR_TRUST_CANVAS_ID)
         .unwrap();
+}
+
+#[tokio::main]
+async fn main() {
+    // Define the PUT /update endpoint
+    let update_route = warp::put()
+        .and(warp::path("update"))
+        .and(warp::body::json())
+        .map(|payload: Payload| {
+            // Process the payload
+            let merkle_tree = build_merkle_tree_from_pixels(payload.matrix);
+            let serialized_merkle_tree = serialize_merkle_tree(merkle_tree);
+
+            // Here you would typically process the commands and update the merkle tree
+            // For now, we just return the serialized merkle tree as a response
+            warp::reply::json(&serialized_merkle_tree)
+        });
+
+    // Start the server
+    warp::serve(update_route).run(([127, 0, 0, 1], 3030)).await;
 }

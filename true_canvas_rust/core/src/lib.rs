@@ -6,7 +6,7 @@ use ark_serialize::{CanonicalSerialize, CanonicalDeserialize};
 use rand::Rng;
 
 
-pub const CANVAS_SIZE: usize = 4;
+pub const CANVAS_SIZE: usize = 256;
 
 // mod merkle_tree;
 #[derive(Debug, Serialize, Deserialize)]
