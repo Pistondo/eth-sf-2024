@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, SetStateAction, Dispatch } from 'react';
+import { useState, useEffect, SetStateAction, Dispatch, } from 'react';
 import { getFileContent } from '@/app/verify/fileUtils'
 import { useVerifySubmission } from '@/app/hooks/useVerifySubmission';
 
@@ -109,18 +109,13 @@ export default function Verify() {
   const [imageId, setImageId] = useState<string | null>(null);
   const [proof, setProof] = useState<ZKProofResponse | null>(null);
   const [displayMsg, setDisplayMsg] = useState<string>('');
-  const router = useRouter();
 
   const handleSubmit = async () => {
     if (image && workLogs) {
       setDisplayMsg('');
-      setWaitingTime(0);
       setProof(null);
       let workLogsString = await getFileContent(workLogs)
       const result = await submitVerification(image, workLogsString);
-      if (result?.imageId) {
-        router.push(`/processing?imageId=${result.imageId}`);
-      }
     } else {
       setDisplayMsg('Please upload an image and work logs');
     }
