@@ -43,7 +43,7 @@ const NotarizeArt = (
             </div>
             <button
               className="w-full p-3 border border-gray-600 rounded flex justify-center items-center hover:bg-gray-900/[.90] transition-colors"
-              onClick={() => document.getElementById('worklogs').click()} // Trigger the file input
+              onClick={() => document.getElementById('worklogs')?.click()} // Trigger the file input
             >
               {workLogs ? 'Done ✅' : 'ADD +'}
             </button>
@@ -64,7 +64,7 @@ const NotarizeArt = (
             </div>
             <button
               className="w-full p-3 border border-gray-600 rounded flex justify-center items-center hover:bg-gray-900/[.90] transition-colors"
-              onClick={() => document.getElementById('image').click()} // Trigger the file input
+              onClick={() => document.getElementById('image')?.click()} // Trigger the file input
             >
               {image ? 'Done ✅' : 'ADD +'}
             </button>
@@ -126,34 +126,6 @@ export default function Verify() {
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
-    let startTime: number;
-
-    const checkProofStatus = async () => {
-      if (imageId) {
-        try {
-          console.log(`Checking proof status for imageId: ${imageId}`);
-          const response = await fetch(`https://truecanvas.uc.r.appspot.com/proof_status?imageID=${imageId}`);
-
-          const data: ProofStatusResponse = await response.json();
-          if (data.proofStatus === 'proven') {
-            setProof(data.ZKproof || null);
-            clearInterval(intervalId);
-          } else if (data.proofStatus === 'failed') {
-            setDisplayMsg('Proof generation failed');
-            clearInterval(intervalId);
-          } else {
-            // Update waiting time
-            setWaitingTime(Math.floor((Date.now() - startTime) / 1000));
-          }
-        } catch (error) {
-          setDisplayMsg(`Error checking proof status: ${JSON.stringify(error)}`);
-          setWaitingTime(Math.floor((Date.now() - startTime) / 1000));
-          // Don't clear the interval here, let it keep trying
-          clearInterval(intervalId);
-        }
-      }
-    };
-
 
     return () => {
       if (intervalId) clearInterval(intervalId);
