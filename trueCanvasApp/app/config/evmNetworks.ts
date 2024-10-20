@@ -4,7 +4,7 @@ const storyLogo = 'https://explorer.story.foundation/_next/static/media/favicon.
 export const evmNetworks = [
     {
       // polygon zk evm cardona
-      blockExplorerUrls: ['https://zkevm.polygonscan.com/'],
+      blockExplorerUrls: ['https://cardona-zkevm.polygonscan.com/'],
       chainId: 2442,
       chainName: 'Polygon ZK EVM Cardona',
       iconUrls: [polygonZkEVMLogo],

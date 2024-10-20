@@ -3,6 +3,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import PageLayout from '@/components/PageLayout';
 import { useVerifySubmission } from '@/app/hooks/useVerifySubmission';
+import { useMintNFT } from '@/app/hooks/useMintNFT';
 
 interface ProofStatusResponse {
   proofStatus: 'proven' | 'unproven' | 'failed';
@@ -26,6 +27,8 @@ export default function Verify() {
   const [displayMsg, setDisplayMsg] = useState<string>('');
   const [waitingTime, setWaitingTime] = useState<number>(0);
 
+  const { mintNFT, loading: mintingLoading, error: mintingError } = useMintNFT();
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (image && text) {
@@ -41,6 +44,14 @@ export default function Verify() {
     }
   };
 
+  const handleMint = async () => {
+    // if (proof) {
+      // const { sourceHash, destHash, proof: proofArray } = proof;
+      // await mintNFT("https://example.com/image.png", "proven", sourceHash, destHash, proofArray);
+      await mintNFT("sample");
+    // }
+  };
+
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     let startTime: number;
@@ -53,6 +64,8 @@ export default function Verify() {
 
           const data: ProofStatusResponse = await response.json();
           if (data.proofStatus === 'proven') {
+            console.log('here is the data');
+            console.log(data);
             setProof(data.ZKproof || null);
             clearInterval(intervalId);
           } else if (data.proofStatus === 'failed') {
@@ -123,6 +136,16 @@ export default function Verify() {
       {imageId && <p className="text-blue-500 mt-4">Waiting for proof generation for imageId {imageId}... for {waitingTime} seconds</p>}
       {proof && <p className="text-green-500 mt-4">Proof received: {JSON.stringify(proof)}</p>}
       {displayMsg && <p className="text-black mt-4">{displayMsg}</p>}
+      {proof && (
+        <button
+          onClick={handleMint}
+          disabled={mintingLoading}
+          className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-green-300"
+        >
+          {mintingLoading ? 'Minting...' : 'Mint NFT'}
+        </button>
+      )}
+      {mintingError && <p className="text-red-500 mt-4">{mintingError}</p>}
     </PageLayout>
   );
 }
