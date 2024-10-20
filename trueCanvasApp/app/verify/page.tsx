@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import { useVerifySubmission } from '@/app/hooks/useVerifySubmission';
 
@@ -20,66 +21,22 @@ interface ZKProofResponse {
 export default function Verify() {
   const [image, setImage] = useState<File | null>(null);
   const [text, setText] = useState('');
-  const { isLoading, error, success, submitVerification } = useVerifySubmission();
-  const [imageId, setImageId] = useState<string | null>(null);
-  const [proof, setProof] = useState<ZKProofResponse | null>(null);
+  const { isLoading, error, submitVerification } = useVerifySubmission();
   const [displayMsg, setDisplayMsg] = useState<string>('');
-  const [waitingTime, setWaitingTime] = useState<number>(0);
+  const router = useRouter();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (image && text) {
       setDisplayMsg('');
-      setWaitingTime(0);
-      setProof(null);
       const result = await submitVerification(image, text);
       if (result?.imageId) {
-        setImageId(result.imageId);
+        router.push(`/processing?imageId=${result.imageId}`);
       }
     } else {
       setDisplayMsg('Please upload an image and enter text');
     }
   };
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    let startTime: number;
-
-    const checkProofStatus = async () => {
-      if (imageId) {
-        try {
-          console.log(`Checking proof status for imageId: ${imageId}`);
-          const response = await fetch(`https://truecanvas.uc.r.appspot.com/proof_status?imageID=${imageId}`);
-
-          const data: ProofStatusResponse = await response.json();
-          if (data.proofStatus === 'proven') {
-            setProof(data.ZKproof || null);
-            clearInterval(intervalId);
-          } else if (data.proofStatus === 'failed') {
-            setDisplayMsg('Proof generation failed');
-            clearInterval(intervalId);
-          } else {
-            // Update waiting time
-            setWaitingTime(Math.floor((Date.now() - startTime) / 1000));
-          }
-        } catch (error) {
-          setDisplayMsg(`Error checking proof status: ${JSON.stringify(error)}`);
-          setWaitingTime(Math.floor((Date.now() - startTime) / 1000));
-          // Don't clear the interval here, let it keep trying
-          clearInterval(intervalId);
-        }
-      }
-    };
-
-    if (imageId && !proof) {
-      startTime = Date.now();
-      intervalId = setInterval(checkProofStatus, 5000);
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [imageId, proof]);
 
   return (
     <PageLayout title="Verify">
@@ -119,9 +76,6 @@ export default function Verify() {
         </button>
       </form>
       {error && <p className="text-red-500 mt-4">{error}</p>}
-      {success && <p className="text-green-500 mt-4">Verification submitted successfully!</p>}
-      {imageId && <p className="text-blue-500 mt-4">Waiting for proof generation for imageId {imageId}... for {waitingTime} seconds</p>}
-      {proof && <p className="text-green-500 mt-4">Proof received: {JSON.stringify(proof)}</p>}
       {displayMsg && <p className="text-black mt-4">{displayMsg}</p>}
     </PageLayout>
   );
