@@ -1,27 +1,33 @@
 use serde::{Deserialize, Serialize};
 use ark_ed_on_bls12_381::Fq; // Finite field for Poseidon hash
-use ark_std::{rand::Rng, vec::Vec};
-use ark_ff::PrimeField;
-use ark_sponge::{poseidon::{PoseidonConfig, PoseidonSponge}, Absorb, CryptographicSponge};
+use ark_std::vec::Vec;
+use ark_sponge::{poseidon::{PoseidonConfig, PoseidonSponge}, CryptographicSponge};
+use ark_serialize::{CanonicalSerialize, CanonicalDeserialize};
+use rand::Rng;
 
+
+pub const CANVAS_SIZE: usize = 4;
+
+// mod merkle_tree;
 #[derive(Debug, Serialize, Deserialize)]
-struct Action {
+pub struct Command {
     action_type: String,
     pixels: Vec<Pixel>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Pixel {
+pub struct Pixel {
     x: u32,
     y: u32,
     value: u32, // Colors can be represented as hexadecimal values which in hand are numbers
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Canvas {
-    actions: Vec<Action>,
-    final_state: Vec<Pixel>,
+pub struct Diff {
+    actions: Vec<Command>,
 }
+
+pub type SerializedMerkleTree = Vec<Vec<Vec<u8>>>;
 
 pub struct MerkleTree {
     pub levels: Vec<Vec<Fq>>, // Each level contains a vector of hashes
@@ -159,4 +165,91 @@ fn hash_two_elements(left: Fq, right: Fq) -> Fq {
     sponge.absorb(&left); 
     sponge.absorb(&right); 
     sponge.squeeze_field_elements(1)[0]
+}
+
+
+// We go through each action in the diff input and for each action, we go through each pixel in the action and update the merkle tree
+pub fn process_canvas_changes(width: usize, merkle_tree: &mut MerkleTree, commands: Vec<Command>) {
+    for command in commands {
+        for pixel in command.pixels {
+            let index = (pixel.y as usize) * (width as usize) + (pixel.x as usize);
+            merkle_tree.update_leaf(index, Fq::from(pixel.value as u64));
+        }
+    }
+}
+
+// build merkle tree from pixel matrix
+pub fn build_merkle_tree_from_pixels(pixels: Vec<Vec<u32>>) -> MerkleTree {
+    let flattened_pixels: Vec<Fq> = pixels.into_iter()
+        .flatten()
+        .map(|pixel| Fq::from(pixel as u64))
+        .collect();
+    let mut merkle_tree = MerkleTree::new();
+
+    merkle_tree.build_tree(flattened_pixels);
+    merkle_tree
+}
+
+pub fn deserialize_merkle_tree(serialized_merkle_tree: SerializedMerkleTree) -> MerkleTree {
+    let mut merkle_tree = MerkleTree::new();
+    merkle_tree.levels = serialized_merkle_tree.into_iter()
+        .map(|level| level.into_iter()
+            .map(|element| Fq::deserialize_compressed(&*element).unwrap())
+            .collect())
+        .collect();
+    merkle_tree
+}
+
+pub fn serialize_merkle_tree(merkle_tree: MerkleTree) -> SerializedMerkleTree {
+    merkle_tree.levels.into_iter()
+        .map(|level| level.into_iter()
+            .map(|element| {
+                let mut serialized = Vec::new();
+                element.serialize_compressed(&mut serialized).unwrap();
+                serialized
+            })
+            .collect())
+        .collect()
+}
+
+pub fn generate_random_matrix(n: usize) -> Vec<Vec<u32>> {
+    let mut rng = rand::thread_rng();
+    let mut matrix = Vec::with_capacity(n);
+
+    for _ in 0..n {
+        let row: Vec<u32> = (0..n).map(|_| rng.gen()).collect();
+        matrix.push(row);
+    }
+
+    matrix
+}
+
+pub fn generate_random_command(num_pixels: usize, canvas_size: usize) -> Command {
+    let mut rng = rand::thread_rng();
+    let action_types = vec!["draw", "erase"];
+    
+    Command {
+        action_type: action_types[rng.gen_range(0..action_types.len())].to_string(),
+        pixels: (0..num_pixels)
+            .map(|_| Pixel {
+                x: rng.gen_range(0..canvas_size) as u32,  // Assuming an n x n canvas
+                y: rng.gen_range(0..canvas_size) as u32,
+                value: rng.gen(),  // Random color
+            })
+            .collect(),
+    }
+}
+
+
+pub fn generate_random_command_sequence(num_commands: usize, canvas_size: usize, max_num_pixel_changes: usize) -> Vec<Command> {
+    let mut rng = rand::thread_rng();
+    let mut commands = Vec::with_capacity(num_commands);
+
+    for _ in 0..num_commands {
+        let num_pixels = rng.gen_range(1..=max_num_pixel_changes);
+        let command = generate_random_command(num_pixels, canvas_size);
+        commands.push(command);
+    }
+
+    commands
 }

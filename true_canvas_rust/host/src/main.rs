@@ -4,8 +4,17 @@ use methods::{
     GUEST_CODE_FOR_TRUST_CANVAS_ELF, GUEST_CODE_FOR_TRUST_CANVAS_ID
 };
 use risc0_zkvm::{default_prover, ExecutorEnv};
+use true_canvas_core::{build_merkle_tree_from_pixels, generate_random_command_sequence, generate_random_matrix, serialize_merkle_tree, CANVAS_SIZE};
 
 fn main() {
+
+
+    let matrix = generate_random_matrix(CANVAS_SIZE);
+    let merkle_tree = build_merkle_tree_from_pixels(matrix);
+    let commands = generate_random_command_sequence(10, CANVAS_SIZE, 4);
+    let serialized_merkle_tree = serialize_merkle_tree(merkle_tree);
+
+    
     // Initialize tracing. In order to view logs, run `RUST_LOG=info cargo run`
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
@@ -24,9 +33,10 @@ fn main() {
     // ExecutorEnvBuilder::build().
 
     // For example:
-    let input: Vec<u32> = vec![1, 2, 3, 4, 5];
     let env = ExecutorEnv::builder()
-        .write(&input)
+        .write(&serialized_merkle_tree)
+        .unwrap()
+        .write(&commands)
         .unwrap()
         .build()
         .unwrap();
