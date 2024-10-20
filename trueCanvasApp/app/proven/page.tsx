@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { useMintNFT } from '../hooks/useMintNFT';
 import { useRegisterIPAsset } from '../hooks/useRegisterIPAsset';
 import { evmNetworks } from '../config/evmNetworks';
-
 interface ProofData {
   proofStatus: string;
   ZKproof?: {
@@ -83,7 +82,7 @@ export default function Home() {
 
   return (
     <div
-      className="flex flex-col items-center justify-center text-white p-4"
+      className="relative min-h-screen w-full"
       style={{
         backgroundImage: `url(/page4.png)`,
         backgroundSize: '100% auto',
@@ -94,19 +93,33 @@ export default function Home() {
       }}
     >
       {proofData && (
-        <div className="bg-black bg-opacity-50 p-4 rounded-lg">
+        <div className="absolute top-8 right-8 bg-black bg-opacity-50 p-4 rounded-lg max-w-md">
           <button
             onClick={() => handleMintAndRegister(proofData.ZKproof?.sourceHash || '', proofData.ZKproof?.destHash || '', proofData.ZKproof?.proof || [], proofData.ZKproof?.walrusURI || '')}
             disabled={mintingLoading || registeringLoading}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-green-300"
+            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-green-300 w-full"
           >
             {mintingLoading ? 'Minting...' : registeringLoading ? 'Registering...' : 'Mint & Register NFT'}
           </button>
+          {proofData.ZKproof?.walrusURI && <img src={proofData.ZKproof?.walrusURI} alt="NFT" width={200} height={200} />}
+          {/* {proofData.ZKproof?.walrusURI && <Image src={proofData.ZKproof?.walrusURI} alt="NFT" width={200} height={200} />} */}
           {mintingError && <p className="text-red-500 mt-4">{mintingError}</p>}
           {registeringError && <p className="text-red-500 mt-4">{registeringError}</p>}
-          {txExplorerUrl && <p className="mt-4">Minting Transaction: <a href={txExplorerUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{txExplorerUrl}</a></p>}
-          {registrationTxHash && <p className="mt-4">Registration Transaction: <a href={`${evmNetworks.find(network => network.chainId === chainId)?.blockExplorerUrls[0]}/tx/${registrationTxHash}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{registrationTxHash}</a></p>}
-          {registeredAddress && <p className="mt-4">Registered Address: {registeredAddress}</p>}
+          {txExplorerUrl && (
+            <p className="mt-4 break-words overflow-hidden">
+              Minting Transaction: <a href={txExplorerUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{txExplorerUrl}</a>
+            </p>
+          )}
+          {registrationTxHash && (
+            <p className="mt-4 break-words overflow-hidden">
+              Registration Transaction: <a href={`${evmNetworks.find(network => network.chainId === chainId)?.blockExplorerUrls[0]}/tx/${registrationTxHash}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{registrationTxHash}</a>
+            </p>
+          )}
+          {registeredAddress && (
+            <p className="mt-4 break-words overflow-hidden">
+              Registered Address: {registeredAddress}
+            </p>
+          )}
         </div>
       )}
     </div>

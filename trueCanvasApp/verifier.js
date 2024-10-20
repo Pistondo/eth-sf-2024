@@ -6,10 +6,10 @@ import { buildBn128 } from 'snarkjs';
 import { F1Field } from 'ffjavascript';
 
 async function verifyProof(
-    proof: any,
-    publicSignals: string[],
-    vkJsonPath: string
-): Promise<boolean> {
+    proof,
+    publicSignals,
+    vkJsonPath
+) {
     // Load the verifying key from JSON
     const vkJson = JSON.parse(fs.readFileSync(vkJsonPath, 'utf8'));
 
@@ -33,7 +33,7 @@ async function verifyProof(
         [vkJson.vk_delta.X[0], vkJson.vk_delta.X[1]].map(BigInt),
         [vkJson.vk_delta.Y[0], vkJson.vk_delta.Y[1]].map(BigInt)
     ];
-    const vk_gamma_abc = vkJson.vk_gamma_abc.map((point: any) => {
+    const vk_gamma_abc = vkJson.vk_gamma_abc.map((point) => {
         return [BigInt(point.X), BigInt(point.Y)];
     });
 
