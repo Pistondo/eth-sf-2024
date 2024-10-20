@@ -159,3 +159,6 @@ dist
 .pnp.*
 
 .history/*
+
+# avail
+avail/zksync-era
