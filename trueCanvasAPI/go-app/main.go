@@ -118,6 +118,13 @@ func callProver(imageID, base64ImageString string) {
 	//sleepDuration := time.Duration(rand.Intn(10)+5) * time.Second
 	//time.Sleep(sleepDuration)
 
+	// Why is this hardcoded?
+	// We had SEVERELY underestimated how long a proof could take (expecting about 5+ minutes)
+	// when in reality it took almost 45m to generate a proof for a 4 pixel x 4 pixel image (which you see below).
+	// Unfortunately this meant our initial system design (of trying to have this process be somewhat sync)
+	// not longer worked, and we didn't have time to build out a full message queue system to handle
+	// these long expensive computations :)
+	// So hence, this is a proof that does verify, but we cannot generate live.
 	zkproof := ZKProof{
 		SourceHash: "e11387bdb346d2368fac024bd6871e5e9c3a6e8291b0ac17be3d050eb1cc232f",
 		DestHash:   "73b7e07c8444bf0dc2111f80d1212fa79b0992544b68e6f123a84694c6d1f658",
