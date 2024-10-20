@@ -18,7 +18,7 @@ export default function Home() {
   const [proofData, setProofData] = useState<ProofData | null>(null);
   const searchParams = useSearchParams();
   const imageId = searchParams.get('imageId');
-  
+
   const { mintNFT, loading: mintingLoading, error: mintingError, txExplorerUrl } = useMintNFT();
 
 
@@ -39,10 +39,10 @@ export default function Home() {
   }, [imageId]);
 
   const handleMint = async (sourceHash: string, destHash: string, proof: string[], walrusURI: string) => {
-      await mintNFT(sourceHash, destHash, proof, walrusURI);
-      // if (txExplorerUrl) {
-      //   alert(`Transaction successful! View on block explorer: ${txExplorerUrl}`);
-      // }
+    await mintNFT(sourceHash, destHash, proof, walrusURI);
+    // if (txExplorerUrl) {
+    //   alert(`Transaction successful! View on block explorer: ${txExplorerUrl}`);
+    // }
   };
 
   return (
@@ -59,13 +59,13 @@ export default function Home() {
     >
       {proofData && (
         <div className="bg-black bg-opacity-50 p-4 rounded-lg">
-        <button 
-          onClick={() => handleMint(proofData.ZKproof?.sourceHash || '', proofData.ZKproof?.destHash || '', proofData.ZKproof?.proof || [], proofData.ZKproof?.walrusURI || '')}
-          disabled={mintingLoading}
-          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-green-300"
-        >
-          {mintingLoading ? 'Minting...' : 'Mint NFT'}
-        </button>
+          <button
+            onClick={() => handleMint(proofData.ZKproof?.sourceHash || '', proofData.ZKproof?.destHash || '', proofData.ZKproof?.proof || [], proofData.ZKproof?.walrusURI || '')}
+            disabled={mintingLoading}
+            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-green-300"
+          >
+            {mintingLoading ? 'Minting...' : 'Mint NFT'}
+          </button>
           {mintingError && <p className="text-red-500 mt-4">{mintingError}</p>}
         </div>
       )}
