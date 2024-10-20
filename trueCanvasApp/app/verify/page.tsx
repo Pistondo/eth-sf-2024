@@ -1,8 +1,92 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
-import PageLayout from '@/components/PageLayout';
+import { useState, useEffect, SetStateAction, Dispatch } from 'react';
+import { getFileContent } from '@/app/verify/fileUtils'
 import { useVerifySubmission } from '@/app/hooks/useVerifySubmission';
+
+
+
+const ArrowUpRightIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M7 17L17 7" />
+    <path d="M7 7h10v10" />
+  </svg>
+);
+
+const NotarizeArt = (
+  image: File | null,
+  setImage: Dispatch<SetStateAction<File | null>>,
+  workLogs: File | null,
+  setWorkLogs: Dispatch<SetStateAction<File | null>>,
+  handleSubmit: any
+) => {
+  const [isLogsButtonOpen, setLogsButtonOpen] = useState(false);
+  return (
+    <div className="text-white min-h-screen mt-[600px]">
+      <div className="max-w-7xl mx-auto border border-zinc-500 rounded-3xl p-8 bg-slate-900/[.71]">
+        <h1 className="text-5xl font-bold mb-16">Notarize Your Art</h1>
+        <div className="flex flex-nowrap overflow-x-auto gap-8 pb-4">
+          <div className="flex-1 min-w-[250px] space-y-4">
+            <div className="space-y-2">
+              <p className="text-[#F4FFA5] font-medium text-4xl">STEP 1</p>
+              <h2 className="text-l font-bold leading-tight min-h-[60px]">UPLOAD SAVED ACTIONS OF YOUR DIGITAL ART</h2>
+              <p className="text-sm text-[#888686] min-h-[40px]">ILLUSTRATOR: GO TO WINDOW &gt; ACTIONS &gt; SAVE ACTIONS &gt; ACTIONS.AIA</p>
+            </div>
+            <button
+              className="w-full p-3 border border-gray-600 rounded flex justify-center items-center hover:bg-gray-900/[.90] transition-colors"
+              onClick={() => document.getElementById('worklogs').click()} // Trigger the file input
+            >
+              {workLogs ? 'Done ✅' : 'ADD +'}
+            </button>
+            <input
+              type="file"
+              id="worklogs"
+              accept=".txt"
+              onChange={(e) => setWorkLogs(e.target.files?.[0] || null)}
+              className="hidden"
+            />
+
+          </div>
+          <div className="flex-1 min-w-[250px] space-y-4">
+            <div className="space-y-2">
+              <p className="text-[#F4FFA5] font-medium text-4xl">STEP 2</p>
+              <h2 className="text-l font-bold leading-tight min-h-[60px]">UPLOAD YOUR VISUAL IMAGES</h2>
+              <p className="text-sm text-[#888686] min-h-[40px]">YOUR DIGITAL ART VISUALIZATIONS</p>
+            </div>
+            <button
+              className="w-full p-3 border border-gray-600 rounded flex justify-center items-center hover:bg-gray-900/[.90] transition-colors"
+              onClick={() => document.getElementById('image').click()} // Trigger the file input
+            >
+              {image ? 'Done ✅' : 'ADD +'}
+            </button>
+            <input
+              type="file"
+              id="image"
+              accept="image/*"
+              onChange={(e) => setImage(e.target.files?.[0] || null)}
+              className="hidden"
+            />
+
+          </div>
+          <div className="flex-1 min-w-[250px] flex flex-col justify-end">
+            <button className="w-full p-3 bg-white text-black rounded flex justify-center items-center gap-2 hover:bg-gray-200 transition-colors" onClick={() => handleSubmit()}>
+              Upload! <ArrowUpRightIcon />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface ProofStatusResponse {
   proofStatus: 'proven' | 'unproven' | 'failed';
@@ -14,30 +98,31 @@ interface ZKProofResponse {
     sourceHash: string;
     destHash: string;
     proof: string[];
+    walrusURI?: string;
   };
 }
 
 export default function Verify() {
   const [image, setImage] = useState<File | null>(null);
-  const [text, setText] = useState('');
+  const [workLogs, setWorkLogs] = useState<File | null>(null);
   const { isLoading, error, success, submitVerification } = useVerifySubmission();
   const [imageId, setImageId] = useState<string | null>(null);
   const [proof, setProof] = useState<ZKProofResponse | null>(null);
   const [displayMsg, setDisplayMsg] = useState<string>('');
   const [waitingTime, setWaitingTime] = useState<number>(0);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (image && text) {
+  const handleSubmit = async () => {
+    if (image && workLogs) {
       setDisplayMsg('');
       setWaitingTime(0);
       setProof(null);
-      const result = await submitVerification(image, text);
+      let workLogsString = await getFileContent(workLogs)
+      const result = await submitVerification(image, workLogsString);
       if (result?.imageId) {
         setImageId(result.imageId);
       }
     } else {
-      setDisplayMsg('Please upload an image and enter text');
+      setDisplayMsg('Please upload an image and work logs');
     }
   };
 
@@ -71,58 +156,22 @@ export default function Verify() {
       }
     };
 
-    if (imageId && !proof) {
-      startTime = Date.now();
-      intervalId = setInterval(checkProofStatus, 5000);
-    }
 
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [imageId, proof]);
 
-  return (
-    <PageLayout title="Verify">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-            Image
-          </label>
-          <input
-            type="file"
-            id="image"
-            accept="image/*"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
-            className="mt-1 block w-full"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="text" className="block text-sm font-medium text-gray-700">
-            Text
-          </label>
-          <input
-            type="text"
-            id="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-black"
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
-        >
-          {isLoading ? 'Submitting...' : 'Submit'}
-        </button>
-      </form>
-      {error && <p className="text-red-500 mt-4">{error}</p>}
-      {success && <p className="text-green-500 mt-4">Verification submitted successfully!</p>}
-      {imageId && <p className="text-blue-500 mt-4">Waiting for proof generation for imageId {imageId}... for {waitingTime} seconds</p>}
-      {proof && <p className="text-green-500 mt-4">Proof received: {JSON.stringify(proof)}</p>}
-      {displayMsg && <p className="text-black mt-4">{displayMsg}</p>}
-    </PageLayout>
+
+  return (<div
+    className="flex flex-col text-white p-4 pt-200"
+    style={{
+      backgroundImage: `url(/page2.png)`,
+      backgroundSize: 'contain',
+      backgroundPosition: '50% 0%', // Center horizontally, align to the top
+      height: '3800px', // Fill the entire viewport height
+    }}>
+    {NotarizeArt(image, setImage, workLogs, setWorkLogs, handleSubmit)}
+  </div>
   );
 }

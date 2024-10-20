@@ -283,7 +283,7 @@ func uploadImageToWalrus(base64Image string, strChan chan string) {
 		strChan <- ""
 		return
 	}
-	req, err := http.NewRequest("PUT", walrusPublisherURL+"/v1/store?epochs=5", bytes.NewBuffer(imageData))
+	req, err := http.NewRequest("PUT", walrusPublisherURL, bytes.NewBuffer(imageData))
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		strChan <- ""
