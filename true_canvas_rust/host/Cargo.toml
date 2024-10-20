@@ -1,0 +1,16 @@
+[package]
+name = "host"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+methods = { path = "../methods" }
+risc0-zkvm = { version = "1.1.2" }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde = "1.0"
+ark-sponge = "0.4.0-alpha"
+ark-std = "0.4"
+ark-ff = { version = "0.4" }
+ark-ed-on-bls12-381 = { version = "0.4"}
+ark-serialize = "0.4"
+true-canvas-core = { path = "../core" }
