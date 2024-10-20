@@ -39,15 +39,12 @@ contract ZKPVerifiedNFT is ERC721, Ownable {
 
     mapping(uint256 => ArtworkMetadata) private _artworkMetadata;
 
-    // BN256 Field Modulus
-
     constructor() ERC721("ZKPVerifiedNFT", "ZKPNFT") Ownable(msg.sender) {
         vk_alpha = G1Point(
             uint256(1948273649102837465019273641092837465901823741092837465910283746128374),
             uint256(7482913746192837465019283746510928374651902837465102938746109283746123)
         );
 
-        // Initialize vk_beta
         vk_beta = G2Point(
             [
                 uint256(2837465019283746510293746109283746510298374651902837465910283746509123),
@@ -59,7 +56,6 @@ contract ZKPVerifiedNFT is ERC721, Ownable {
             ]
         );
 
-        // Initialize vk_gamma
         vk_gamma = G2Point(
             [
                 uint256(3928475610298374650192837465019283746510928374650192837465019283746510),
@@ -71,7 +67,6 @@ contract ZKPVerifiedNFT is ERC721, Ownable {
             ]
         );
 
-        // Initialize vk_delta
         vk_delta = G2Point(
             [
                 uint256(7182938475610298374650192837465019283746510928374650192837465019283746),
@@ -83,7 +78,6 @@ contract ZKPVerifiedNFT is ERC721, Ownable {
             ]
         );
 
-        // Initialize vk_gamma_abc
         vk_gamma_abc.push(G1Point(
             uint256(3981023746519283746510928374650192837465102938475610298374650192837465),
             uint256(2309183746510928374650192837465019283746510928374650192837465019283746)
