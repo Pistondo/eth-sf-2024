@@ -109,7 +109,7 @@ export default function Verify() {
   const [imageId, setImageId] = useState<string | null>(null);
   const [proof, setProof] = useState<ZKProofResponse | null>(null);
   const [displayMsg, setDisplayMsg] = useState<string>('');
-  const [waitingTime, setWaitingTime] = useState<number>(0);
+  const router = useRouter();
 
   const handleSubmit = async () => {
     if (image && workLogs) {
@@ -119,7 +119,7 @@ export default function Verify() {
       let workLogsString = await getFileContent(workLogs)
       const result = await submitVerification(image, workLogsString);
       if (result?.imageId) {
-        setImageId(result.imageId);
+        router.push(`/processing?imageId=${result.imageId}`);
       }
     } else {
       setDisplayMsg('Please upload an image and work logs');
