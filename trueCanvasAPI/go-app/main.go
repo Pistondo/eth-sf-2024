@@ -14,11 +14,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 const proverURL string = "https://example.com"
-const walrusPublisherURL string = "https://publisher.walrus-testnet.walrus.space/v1/store?epochs=25"
+const walrusPublisherURL string = "https://walrus-testnet-publisher.nodes.guru/v1/store?epochs=100"
 const walrusAggregatorURL string = "https://aggregator.walrus-testnet.walrus.space/v1/"
 
 // Proof Structures
@@ -117,8 +116,8 @@ func callProver(imageID, base64ImageString string) {
 	walrusURI := <-strChan
 
 	// Remove this once you're done testing.
-	sleepDuration := time.Duration(rand.Intn(10)+5) * time.Second
-	time.Sleep(sleepDuration)
+	//sleepDuration := time.Duration(rand.Intn(10)+5) * time.Second
+	//time.Sleep(sleepDuration)
 
 	zkproof := ZKProof{
 		SourceHash: GenerateRandomString(25),
@@ -311,6 +310,14 @@ func uploadImageToWalrus(base64Image string, strChan chan string) {
 	if resp.StatusCode == http.StatusOK {
 		fmt.Println("Image uploaded successfully")
 	} else {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading response body:", err)
+			strChan <- ""
+			return
+		}
+
+		fmt.Println("Response body:", string(body))
 		fmt.Printf("Failed to upload image. Status: %s\n", resp.Status)
 		strChan <- ""
 		return
