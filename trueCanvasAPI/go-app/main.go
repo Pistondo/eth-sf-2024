@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -16,12 +18,15 @@ import (
 )
 
 const proverURL string = "https://example.com"
+const walrusPublisherURL string = "https://publisher.walrus-testnet.walrus.space"
+const walrusAggregatorURL string = "https://aggregator.walrus-testnet.walrus.space/v1/"
 
 // Proof Structures
 type ZKProof struct {
 	SourceHash string   `json:"sourceHash"`
 	DestHash   string   `json:"destHash"`
 	Proof      []string `json:"proof"`
+	WalrusURI  string   `json:"walrusURI"`
 }
 
 type GetProofResponse struct {
@@ -101,11 +106,15 @@ func GenerateRandomString(length int) string {
 }
 
 // Async To Get Verify
-func callProver(imageID string) {
+func callProver(imageID, base64ImageString string) {
 	res, err := http.Get(proverURL)
 	if err != nil {
 		log.Printf((err.Error()))
 	}
+	strChan := make(chan string)
+
+	go uploadImageToWalrus(base64ImageString, strChan)
+	walrusURI := <-strChan
 
 	// Remove this once you're done testing.
 	sleepDuration := time.Duration(rand.Intn(36)+25) * time.Second
@@ -115,6 +124,7 @@ func callProver(imageID string) {
 		SourceHash: GenerateRandomString(25),
 		DestHash:   GenerateRandomString(25),
 		Proof:      []string{GenerateRandomString(7), GenerateRandomString(7), GenerateRandomString(7)},
+		WalrusURI:  walrusAggregatorURL + walrusURI,
 	}
 
 	data, _ := json.MarshalIndent(zkproof, "", "  ")
@@ -160,6 +170,7 @@ func getProofStatusHandler(w http.ResponseWriter, r *http.Request) {
 			SourceHash: "",
 			DestHash:   "",
 			Proof:      []string{},
+			WalrusURI:  "",
 		},
 	})
 
@@ -204,6 +215,7 @@ func getProofObject(imageID string) ZKProof {
 		SourceHash: "",
 		DestHash:   "",
 		Proof:      []string{},
+		WalrusURI:  "",
 	}
 }
 
@@ -241,7 +253,9 @@ func postVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go callProver(imageId)
+	if !checkProofExists(imageId) {
+		go callProver(imageId, verifyRequest.Image)
+	}
 
 	json.NewEncoder(w).Encode(VerifyResponse{
 		VerificationStatus: "verified",
@@ -257,6 +271,82 @@ func getAvailableContracts(w http.ResponseWriter, r *http.Request) {
 	}
 	allowAllOrigns(w)
 	fmt.Fprint(w, "Available Contracts")
+}
+
+// Only PNG supported so far.
+// Function should return the blobID
+func uploadImageToWalrus(base64Image string, strChan chan string) {
+	base64Image = strings.TrimPrefix(base64Image, "data:image/png;base64,")
+	imageData, err := base64.StdEncoding.DecodeString(base64Image)
+	if err != nil {
+		fmt.Println("Error decoding Base64:", err)
+		strChan <- ""
+		return
+	}
+	req, err := http.NewRequest("PUT", walrusPublisherURL+"/v1/store?epochs=5", bytes.NewBuffer(imageData))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		strChan <- ""
+		return
+	}
+
+	req.Header.Set("Content-Type", "image/png")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		strChan <- ""
+		return
+	}
+	// Check the response
+	if resp.StatusCode == http.StatusOK {
+		fmt.Println("Image uploaded successfully")
+	} else {
+		fmt.Printf("Failed to upload image. Status: %s\n", resp.Status)
+		strChan <- ""
+		return
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		strChan <- ""
+		return
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		fmt.Println("Error parsing JSON:", err)
+		strChan <- ""
+		return
+	}
+
+	if alreadyCertified, ok := result["alreadyCertified"].(map[string]interface{}); ok {
+		if blobId, ok := alreadyCertified["blobId"].(string); ok {
+			fmt.Println("Blob ID:", blobId)
+			strChan <- blobId
+			return
+		}
+	}
+
+	if newlyCreated, ok := result["newlyCreated"].(map[string]interface{}); ok {
+		if blobObject, ok := newlyCreated["blobObject"].(map[string]interface{}); ok {
+			if blobId, ok := blobObject["blobId"].(string); ok {
+				fmt.Println("Blob ID:", blobId)
+				strChan <- blobId
+				return
+			} else {
+				fmt.Println("Blob ID not found or is not a string")
+			}
+		} else {
+			fmt.Println("blobObject not found or is not a map")
+		}
+	} else {
+		fmt.Println("newlyCreated not found or is not a map")
+	}
+	strChan <- ""
+	return
 }
 
 func main() {
