@@ -1,5 +1,7 @@
 # eth-sf-2024
 
+Loom Demo Video: https://www.loom.com/share/0ea0bd1666f945b28442a18297a42250?sid=9852cbe6-3151-4d8b-8d7c-c440654a6668
+
 ## Technologies Used
 
 ### Story
@@ -18,7 +20,7 @@ TrueCanvas provides a unique and innovative way to bring crypto everywhere by en
 - We use Dynamic so users can connect their wallets across chains to TrueCanvas.
 
 ### Walrus
-Walrus is used as decentralized storage for the images that are being processed and verified in this application.
+Walrus is used as decentralized storage for the images that are being processed and verified in TrueCanvas.
 - The images are uploaded to Walrus.
 - The resulting Blob ID is used to create a URI that can be used to retrieve the image later.
 - This URI is then included in the proof object, linking the proof to the specific image stored in Walrus.
