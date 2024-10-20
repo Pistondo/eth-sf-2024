@@ -8,8 +8,7 @@ export default function Home() {
         backgroundPosition: 'top center',
         backgroundRepeat: 'no-repeat',
         width: '100%',
-        minHeight: '100vh',
-        height: 'auto',
+        height: '2000px', // Fill the entire viewport height
       }}>
     </div>
   );

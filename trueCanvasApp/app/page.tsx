@@ -6,7 +6,8 @@ export default function Home() {
         backgroundImage: `url(/page1.png)`,
         backgroundSize: 'contain',
         backgroundPosition: '50% 0%', // Center horizontally, align to the top
-        height: '3800px', // Fill the entire viewport height
+        backgroundRepeat: 'no-repeat',
+        height: '2000px', // Fill the entire viewport height
       }}>
     </div>
   );
