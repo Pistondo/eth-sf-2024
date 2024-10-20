@@ -117,7 +117,7 @@ func callProver(imageID, base64ImageString string) {
 	walrusURI := <-strChan
 
 	// Remove this once you're done testing.
-	sleepDuration := time.Duration(rand.Intn(36)+25) * time.Second
+	sleepDuration := time.Duration(rand.Intn(10)+5) * time.Second
 	time.Sleep(sleepDuration)
 
 	zkproof := ZKProof{
